@@ -1,0 +1,40 @@
+#!/usr/bin/env ruby
+# coding: utf-8
+
+def puts_usage
+  puts 'Usage: pdm2jpg original.pdf [target_dir]'
+  puts
+  puts 'To install, run:'
+  puts '  brew install imagemagick ghostscript poppler'
+  puts '  cp pdf2jpg /usr/local/bin/'
+  exit
+end
+
+if ARGV[0] == nil || ARGV[0] == '-h' || ARGV[0] == '--help'
+  puts_usage
+else
+  original_root = Dir.pwd
+  original_pdf = File.join(original_root, ARGV[0])
+end
+
+# Create target directory
+if ARGV[1] == nil
+  target_dir = ARGV[0].split("/")[-1][0...-4]
+else
+  target_dir = ARGV[1]
+end
+system("mkdir -p #{target_dir}")
+
+# Convert pdf to ppm
+Dir.chdir(target_dir)
+system("pdftoppm -r 300 #{original_pdf} page")
+
+# Convert ppm to jpg
+ppm_files = Dir.glob("*.ppm")
+ppm_files.each do |ppm|
+  base = ppm[5..-1].split(".")[0]
+  system("convert -define jpeg:size=878x1240 -density 300 -geometry 878x1240 #{ppm} #{base}.jpg")
+end
+
+# Remove ppm files
+system("rm *.ppm")
